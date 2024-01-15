@@ -44,19 +44,12 @@ mod rio {
     where
         T: FromStr,
     {
-        let mut line = String::new();
-        match io::stdin().read_line(&mut line) {
-            Ok(bytes) => match bytes {
-                0 => vec![],
-                _ => line
-                    .trim()
-                    .split(" ")
-                    .map(str::trim)
-                    .filter_map(|x| (!x.is_empty()).then(|| x.parse::<T>().ok().unwrap()))
-                    .collect::<Vec<T>>(),
-            },
-            Err(e) => panic!("{}", e),
-        }
+        read_line()
+            .trim()
+            .split(" ")
+            .map(str::trim)
+            .filter_map(|x| (!x.is_empty()).then(|| x.parse::<T>().ok().unwrap()))
+            .collect::<Vec<T>>()
     }
 
     /// Read one element (without any whitespaces inside) from stdin.
@@ -143,23 +136,19 @@ mod rio {
     macro_rules! read_tuple {
         ( $( $t:ty ),* ) => {
             {
-                let mut line = String::new();
-                match std::io::stdin().read_line(&mut line) {
-                    Ok(bytes) => match bytes {
-                        0 => None,
-                        _ => {
-                            let mut iter = line.trim().split(" ").map(str::trim);
-                            let r = (
-                                // `$( ... )*` : https://doc.rust-lang.org/book/ch19-06-macros.html
-                                $(
-                                    iter.next().unwrap().parse::<$t>().ok().unwrap(),
-                                )*
-                            );
-                            assert!(iter.next().is_none());
-                            Some(r)
-                        }
-                    },
-                    Err(e) => panic!("{}", e),
+                let line = crate::rio::read_line();
+                if line.is_empty() {
+                    None
+                } else {
+                    let mut iter = line.trim().split(" ").map(str::trim);
+                    let r = (
+                        // `$( ... )*` : https://doc.rust-lang.org/book/ch19-06-macros.html
+                        $(
+                            iter.next().unwrap().parse::<$t>().ok().unwrap(),
+                        )*
+                    );
+                    assert!(iter.next().is_none());
+                    Some(r)
                 }
             }
         }
@@ -167,35 +156,35 @@ mod rio {
 }
 
 /// # An example
-/// 
+///
 /// ## Input Format
-/// 
+///
 /// Multiple testcases. Each testcases has 3 lines.
-/// 
-/// The first line of each testcase contains two integers `n` and `p`, 
+///
+/// The first line of each testcase contains two integers `n` and `p`,
 /// the second line has an integer array `a` with `n` elements, and the third line has a string `s`.
-/// 
+///
 /// ## Output Format
-/// 
+///
 /// One line with two integers `m` and `l` of each testcase.
-/// 
+///
 /// `m` represents how many elements is greater or equal than `p` in array `a`,
 /// `l` represents the length of string `s`.
-/// 
+///
 /// ## Example Input
-/// 
+///
 /// ```
 /// 5 3
 /// 1 2 3 4 5
 /// Hello, Rust!
 /// ```
-/// 
+///
 /// ## Example Output
-/// 
+///
 /// ```
 /// 3 12
 /// ```
-/// 
+///
 fn main() {
     while let Some((n, p)) = read_tuple!(usize, i32) {
         let array = rio::read_list::<i32>();
